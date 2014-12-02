@@ -13,8 +13,8 @@ int main()
   
   auto f = &test::t0;
 
-  //int i;
-  //(t.*f)(i);
-  auto i = t_o(t, &test::t0, int);
-  auto s = t_o(t, &test::t1, std::string);
+  //auto i = t_ol(t, &test::t0, int);
+  //auto s = t_o(t, &test::t1, std::string);
+
+  member_function_traits<decltype(&test::t0)>::class_type ct;
 }
