@@ -2,15 +2,14 @@
 
 namespace t_o
 {
-  template<class T> struct member_function_traits;
+  template<class T> struct mft;
   template<class T, class R, class... A>
-  struct member_function_traits<R (T::*)(A...)>
+  struct mft<R (T::*)(A...)>
   {
     using class_type = T;
     using return_type = R;
 
-    //static constexpr std::size_t arity = sizeof...(A); //mathematics term for parameter count to function
-    static constexpr std::size_t max_arg = sizeof...(A) - 1; //will fail for parameter count == 0
+    static constexpr std::size_t arity = sizeof...(A); //mathematics term for parameter count to function
 
     template <std::size_t N>
     struct arg
@@ -19,28 +18,21 @@ namespace t_o
     };
   };
 
-  template <class T> using mft = member_function_traits<T>;
-  template <class T, std::size_t N> using mft_arg_t = typename mft<T>::template arg<N>::type; //ISO C++03 14.2/4 http://stackoverflow.com/questions/3786360/confusing-template-error
+  //TODO(brian): can this be put into mft?
+  //ISO C++03 14.2/4 http://stackoverflow.com/questions/3786360/confusing-template-error
+  template <class T, std::size_t N> using mft_arg_t = 
+    typename mft<T>::template arg<N>::type;
+
   template <class T> using rr = typename std::remove_reference<T>;
 
-  template<class O, class F>
-  auto to_out(O && obj, F func)
+  template<class O, class F, class... A>
+  auto to_out(O && obj, F func, A... args)
   {
-    //get last parameter and remove the reference from it
-    typename rr<mft_arg_t<F, 0>>::type out;
-    //auto arg_count = typename mft<F>::max_arg;
+    constexpr auto arity = mft<F>::arity;
+    typename rr<mft_arg_t<F, arity - 1>>::type out_param;
 
-    (obj.*func)(out);
-    return std::move(out);
+    (obj.*func)(args..., out_param);
+    return std::move(out_param);
   };
 
-  //Removed becuase template is no longer derived by parameters
-  //  //explicit templating specifies this as r-value reference only
-  //  template<class O, class F>
-  //  P to_out(O && obj, F func)
-  //  {
-  //    P out;
-  //    (obj.*func)(out);
-  //    return std::move(out);
-  //  };
 }
